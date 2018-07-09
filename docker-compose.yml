@@ -1,0 +1,41 @@
+version: '2.3'
+services:
+  nginx:
+    build: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./logs/nginx/:/var/log/nginx
+  mysql:
+    image: "mysql:8"
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootpw"
+      MYSQL_DATABASE: "app"
+      MYSQL_USER: "appuser"
+      MYSQL_PASSWORD: "appuserpw"
+    volumes:
+      - ./mysql/data/:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  php:
+      build:
+          context: php
+          args:
+              TIMEZONE: "Europe/Berlin"
+      volumes:
+          - ./app:/var/www/app
+  mail:
+    build: mailcatcher
+    ports:
+      - 82:1080
+      - 25:1025
+  elk:
+      image: willdurand/elk
+      volumes:
+          - ./elk/logstash:/etc/logstash
+          - ./elk/logstash/patterns:/opt/logstash/patterns
+      volumes_from:
+          - php
+          - nginx
+      ports:
+          - 81:80
